@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.thoughtworks.domain.Customer" table="CUSTOMER">
+        <id name="id" column="CUSTOMERPOID">
+            <generator class="sequence">
+                <param name="sequence">S_CUSTOMER</param>
+            </generator>
+        </id>
+        <property name="customerNumber"/>
+        <property name="name"/>
+        <property name="city"/>
+        <property name="phoneCountryCode"/>
+        <property name="phoneAreaCode"/>
+        <property name="phoneNumber"/>
+        <property name="taxLocation"/>
+        <property name="createdDate"/>
+    </class>
+</hibernate-mapping>

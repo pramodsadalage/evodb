@@ -1,0 +1,7 @@
+db.username=<the_user_name>
+db.password=<the_password>
+db.system.username=system
+db.system.password=password
+db.url=jdbc:oracle:thin:@<host_name>:1521:dosa
+db.driver.name=oracle.jdbc.driver.OracleDriver
+db.tablespace=users

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.thoughtworks.domain.Account" table="ACCOUNT">
+        <id name="id" column="ACCOUNTID">
+            <generator class="sequence">
+                <param name="sequence">S_ACCOUNT</param>
+            </generator>
+        </id>
+        <property name="accountNumber"/>
+        <property name="openedOn"/>
+        <property name="closedOn"/>
+        <property name="balance"/>
+        <property name="effectiveSince"/>
+        <property name="accountType"/>
+        <property name="customerPOId"/>
+    </class>
+</hibernate-mapping>

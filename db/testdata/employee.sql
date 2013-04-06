@@ -1,0 +1,2 @@
+--Create Employee
+INSERT INTO EMPLOYEE (EMPLOYEEID, HIREDATE, EMAIL, FIRSTNAME,NICKNAME,HasAccessToCustomer) VALUES (2003 , to_date('01-Dec-2008' , 'dd-mon-yyyy' ), 'joe@foostore.net' , 'JOE','Joey',1 );

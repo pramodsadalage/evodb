@@ -1,0 +1,13 @@
+<project name="Evolutionary Database" default="masterbuild" basedir=".">
+    <property name="db.username" value="CI_DATABASE"/>
+    <property name="db.password" value="CI_DATABASE"/>
+    <property name="db.system.username" value="system"/>
+    <property name="db.system.password" value="password"/>
+    <property name="db.url" value="jdbc:oracle:thin:@pramod-vm:1521:dosa"/>
+    <property name="db.tablespace" value="users"/>
+    <property name="db.driver.name" value="oracle.jdbc.driver.OracleDriver"/>
+    <property name="bdir" value="."/>
+    <target name="masterbuild">
+        <ant antfile="build.xml" dir="${basedir}" target="all"/>
+    </target>
+</project>

@@ -1,0 +1,14 @@
+--CREATE OR REPLACE TRIGGER SynchronizeCustomerIDNumber
+--BEFORE INSERT OR UPDATE
+--ON Customer
+--REFERENCING OLD AS OLD NEW AS NEW
+--FOR EACH ROW
+--BEGIN
+--	IF :NEW.CustomerID IS NULL THEN
+--		:NEW.CustomerID := :NEW.CustomerNumber;
+--	END IF;
+--	IF :NEW.CustomerNumber IS NULL THEN
+--		:New.CustomerNumber := :New.CustomerID;
+--	END IF;
+--END;
+--/

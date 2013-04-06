@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.thoughtworks.domain.Employee" table="EMPLOYEE">
+        <id name="id" column="EMPLOYEEID">
+            <generator class="sequence">
+                <param name="sequence">S_EMPLOYEE</param>
+            </generator>
+        </id>
+        <property name="hireDate"/>
+        <property name="managerEmployeeId"/>
+        <property name="email"/>
+        <property name="firstName"/>
+        <property name="lastName"/>
+        <property name="nickName"/>
+        <property name="terminatedDate"/>
+        <property name="birthDate"/>
+        <property name="hasAccessToCustomer"/>
+    </class>
+</hibernate-mapping>

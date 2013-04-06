@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.thoughtworks.domain.Vehicle" table="VEHICLE">
+        <id name="id" column="VEHICLEID">
+            <generator class="sequence">
+                <param name="sequence">S_VEHICLE</param>
+            </generator>
+        </id>
+        <property name="vin"/>
+        <property name="model"/>
+        <property name="make"/>
+        <property name="year"/>
+        <property name="miles"/>
+    </class>
+</hibernate-mapping>

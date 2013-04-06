@@ -1,0 +1,229 @@
+<project name="AgileDB" default="all" basedir=".">
+    <description>Ant build file for Agile DB using DBDeploy</description>
+
+    <tstamp>
+        <format locale="en_us" pattern="yyyy/MM/d hh:mm:ss" property="time"/>
+    </tstamp>
+    <property name="src" value="src"/>
+    <property name="test_src" value="test"/>
+    <property name="build" value="target"/>
+    <property name="dist" location="${build}/dist"/>
+    <property name="dbdeploy_temp_folder" location="${build}/generate"/>
+    <property name="deltas" location="db/migration"/>
+    <property file="${basedir}/build.properties"/>
+    <property value="db" name="db"/>
+    <property value="lib" name="lib"/>
+    <property value="lib/ojdbc6.jar" name="jdbc.driver.classpath"/>
+
+    <path id="libraries">
+        <fileset dir="${basedir}/lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="dbdeploy.classpath">
+        <fileset dir="lib">
+            <include name="dbdeploy-ant-3.0M3.jar"/>
+            <include name="ojdbc6.jar"/>
+        </fileset>
+    </path>
+
+    <taskdef name="dbdeploy" classname="com.dbdeploy.AntTarget" classpathref="dbdeploy.classpath"/>
+
+    <target name="clean_schema" depends="drop_and_create_database, create_changelog_table"/>
+
+    <target name="create_schema" description="create a schema as defined in the user properties">
+        <echo message="Admin UserName: ${db.system.username}"/>
+        <echo message="Creating Schema: ${db.username}"/>
+
+        <sql password="${db.system.password}" userid="${db.system.username}" url="${db.url}" driver="${db.driver.name}"
+             classpath="${jdbc.driver.classpath}">
+            CREATE USER ${db.username} IDENTIFIED BY ${db.password} DEFAULT TABLESPACE ${db.tablespace};
+            GRANT CONNECT,RESOURCE TO ${db.username};
+            GRANT CREATE VIEW TO ${db.username};
+            ALTER USER ${db.username} DEFAULT ROLE ALL;
+        </sql>
+    </target>
+
+
+    <target name="drop_schema">
+        <echo message="Admin UserName: ${db.system.username}"/>
+        <echo message="Working UserName: ${db.username}"/>
+        <sql password="${db.system.password}" userid="${db.system.username}" url="${db.url}" driver="${db.driver.name}"
+             classpath="${jdbc.driver.classpath}">
+            DROP USER ${db.username} cascade ;
+        </sql>
+    </target>
+
+    <target name="create_changelog_table">
+        <sql driver="${db.driver.name}" url="${db.url}"
+             userid="${db.username}" password="${db.password}" classpath="${jdbc.driver.classpath}">
+            <fileset file="db/VersionTable.sql"/>
+        </sql>
+    </target>
+
+    <target name="upgrade" description="generate a sql upgrade script">
+
+        <dbdeploy driver="${db.driver.name}" url="${db.url}"
+                  userid="${db.username}"
+                  password="${db.password}"
+                  dir="db/migration"
+                  dbms="ora"/>
+    </target>
+
+    <target name="create_db_code">
+        <sql driver="${db.driver.name}"
+             url="${db.url}"
+             userid="${db.username}"
+             password="${db.password}"
+             classpath="${jdbc.driver.classpath}"
+             delimiter="/">
+            <fileset dir="db/code" includes="*.sql"/>
+        </sql>
+    </target>
+
+    <target name="create_test_data">
+        <sql driver="${db.driver.name}"
+             url="${db.url}"
+             userid="${db.username}"
+             password="${db.password}"
+             classpath="${jdbc.driver.classpath}" delimiter=";">
+            <fileset dir="db/testdata" includes="*.sql"/>
+        </sql>
+    </target>
+
+
+    <target name="create_temp_dir">
+        <delete dir="generate"/>
+        <mkdir dir="generate"/>
+    </target>
+
+    <target name="generate_upgrade" depends="create_temp_dir" description="generate a sql upgrade script">
+        <dbdeploy driver="${db.driver.name}"
+                  url="${db.url}"
+                  userid="${db.username}"
+                  password="${db.password}"
+                  dir="db/migration"
+                  outputfile="generate/upgrade.sql"
+                  undoOutputfile="generate/downgrade.sql"
+                  dbms="ora"/>
+        <echo message="Upgrade and Downgrade scripts generated in generate folder"/>
+    </target>
+
+    <target name="show_db_version">
+        <sql driver="${db.driver.name}"
+             url="${db.url}"
+             userid="${db.username}"
+             password="${db.password}"
+             print="true"
+             classpath="${jdbc.driver.classpath}"
+             showheaders="false"
+             showtrailers="false">
+            select 'Current Database Version ==> '|| max(CHANGE_NUMBER) from changelog;
+        </sql>
+    </target>
+
+    <target name="clean_schema_contents">
+        <echo message="Working UserName: ${db.username}"/>
+        <sql password="${db.password}" userid="${db.username}" url="${db.url}" driver="${db.driver.name}"
+             classpath="${jdbc.driver.classpath}" onerror="continue" delimiter="/">
+            <fileset includes="drop.sql" dir="db"/>
+        </sql>
+    </target>
+
+    <target name="drop_and_create_database" depends="drop_schema,create_schema">
+    </target>
+
+
+    <target name="mkdirs">
+        <mkdir dir="${build}"/>
+        <mkdir dir="${dbdeploy_temp_folder}"/>
+        <mkdir dir="${dist}"/>
+    </target>
+
+    <target name="dbinit" depends="clean_schema_contents" description="rebuilds the database without dropping the schema">
+        <echo message="Working UserName: ${db.username}"/>
+        <antcall target="create_changelog_table"/>
+        <antcall target="upgrade"/>
+        <antcall target="create_test_data"/>
+        <antcall target="create_db_code"/>
+    </target>
+
+    <target name="dbset" description="sets the data source information based on build.properties">
+        <echo message="Working with DB: ${db.username}"/>
+        <!-- copying template file to destination -->
+        <copy file="${basedir}/hibernate.cfg.sample.xml" todir="${src}" overwrite="true"/>
+        <move file="${src}/hibernate.cfg.sample.xml" tofile="${src}/hibernate.cfg.xml"/>
+
+        <!--update settings from build.prop file-->
+        <replace file="${src}/hibernate.cfg.xml" token="@connection.username@" value="${db.username}"/>
+        <replace file="${src}/hibernate.cfg.xml" token="@connection.password@" value="${db.password}"/>
+        <replace file="${src}/hibernate.cfg.xml" token="@connection.url@" value="${db.url}"/>
+        <replace file="${src}/hibernate.cfg.xml" token="@connection.driver_class@" value="${db.driver.name}"/>
+        <move file="${src}/hibernate.cfg.xml" tofile="${build}/hibernate.cfg.xml"/>
+        <copy file="log4j.properties" tofile="${build}/log4j.properties"/>
+    </target>
+
+    <target name="clean">
+        <!-- Delete the ${build} and ${dist} directory trees -->
+        <delete dir="${build}"/>
+        <delete dir="${dbdeploy_temp_folder}"/>
+    </target>
+
+    <target name="compile" depends="dbset" description="compile the source ">
+        <!-- Compile the java code from ${src} into ${build} -->
+        <javac fork="true" srcdir="${src}" destdir="${build}" classpathref="libraries" includeantruntime="false"/>
+        <javac fork="true" srcdir="${test_src}" destdir="${build}" classpathref="libraries" includeantruntime="false"/>
+        <copy todir="${build}">
+            <fileset dir="${src}">
+                <type type="file"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="dist" depends="clean,mkdirs,compile" description="generate the distribution">
+        <!-- Create the distribution directory -->
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/application.jar">
+            <fileset dir="${build}" excludes="**/Test.*"/>
+        </jar>
+        <zip destfile="${dist}/dbupgrade.zip">
+            <fileset dir="${deltas}"/>
+            <fileset dir="${db}/deploy"/>
+            <fileset dir="${lib}" includes="ojdbc6.jar"/>
+            <fileset dir="${lib}" includes="dbdeploy-ant-3.0M3.jar"/>
+            <fileset dir="${db}" includes="VersionTable.sql"/>
+        </zip>
+    </target>
+
+    <target name="all" depends="clean,mkdirs,dbinit,compile,test,dist"
+            description="run all the targets to get a clean dist">
+    </target>
+
+
+    <target name="test" depends="compile">
+        <mkdir dir="${build}/test/junit-results"/>
+        <junit fork="true" forkmode="once" showoutput="false" failureproperty="junit.failure" timeout="1800000"
+               printsummary="true">
+            <jvmarg value="-Dbasedir=${basedir}"/>
+            <jvmarg value="-Ddb.drivername=${db.driver.name}"/>
+            <jvmarg value="-Ddb.user=${db.username}"/>
+            <jvmarg value="-Ddb.password=${db.password}"/>
+            <jvmarg value="-Ddb.url=${db.url}"/>
+            <formatter extension=".xml" type="xml"/>
+            <classpath>
+                <pathelement path="${build}"/>
+                <fileset dir="${lib}">
+                    <include name="*.jar"/>
+                    <exclude name="ant.jar"/>
+                </fileset>
+            </classpath>
+            <batchtest fork="yes" todir="${build}/test/junit-results" failureProperty="junit.failure">
+                <fileset dir="${test_src}">
+                    <include name="**/*Test*.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+        <fail if="junit.failure" message="one or more unit tests failed"/>
+    </target>
+</project>

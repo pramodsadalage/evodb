@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="com.thoughtworks.domain.Contact" table="CONTACT">
+        <id name ="id" column="CONTACTID">
+            <generator class="sequence">
+                <param name="sequence">S_CONTACT</param>
+            </generator>
+        </id>
+        <property name="name"/>
+        <property name="phonecountrycode"/>
+        <property name="phoneareacode"/>
+        <property name="phonenumber"/>
+        <property name="email"/>
+    </class>
+</hibernate-mapping>

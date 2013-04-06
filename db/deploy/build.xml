@@ -1,0 +1,81 @@
+<project name="Deploy" default="upgrade" basedir=".">
+    <description>ant build file for deploying database changes using DBDeploy</description>
+
+    <tstamp>
+        <format locale="en_us" pattern="yyyy/MM/d hh:mm:ss" property="time"/>
+    </tstamp>
+    <property name="migration_folder" location="temp"/>
+    <property name="deltas" location="db"/>
+    <property value="ojdbc6.jar" name="driver.classpath"/>
+
+    <path id="libraries">
+        <fileset dir="${basedir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="dbdeploy.classpath">
+        <fileset dir="${basedir}">
+            <include name="dbdeploy-ant-3.0M3.jar"/>
+            <include name="ojdbc6.jar"/>
+        </fileset>
+    </path>
+
+    <taskdef name="dbdeploy" classname="com.dbdeploy.AntTarget" classpathref="dbdeploy.classpath"/>
+
+    <target name="create_temp_dir">
+        <delete dir="${migration_folder}"/>
+        <mkdir dir="${migration_folder}"/>
+    </target>
+
+    <target name="generate_upgrade" depends="create_temp_dir" description="generate a sql upgrade script">
+        <dbdeploy driver="${db.driver.name}"
+                  url="${db.url}"
+                  userid="${db.username}"
+                  password="${db.password}"
+                  dir="${basedir}"
+                  outputfile="${migration_folder}/upgrade.sql"
+                  undoOutputfile="${migration_folder}/downgrade.sql"
+                  dbms="ora"/>
+        <echo message="Upgrade and Downgrade scripts generated in ${migration_folder} "/>
+    </target>
+
+    <target name="upgrade" description="generate a sql upgrade script">
+        <dbdeploy driver="${db.driver.name}" url="${db.url}"
+                  userid="${db.username}"
+                  password="${db.password}"
+                  dir="${basedir}"
+                  dbms="ora"/>
+    </target>
+
+    <target name="create_schema" description="create a schema as defined in the user properties">
+        <echo message="Admin UserName: ${db.system.username}"/>
+        <echo message="Creating Schema: ${db.username}"/>
+
+        <sql password="${db.system.password}" userid="${db.system.username}" url="${db.url}" driver="${db.driver.name}"
+             classpath="${driver.classpath}">
+            CREATE USER ${db.username} IDENTIFIED BY ${db.password} DEFAULT TABLESPACE ${db.tablespace};
+            GRANT CONNECT,RESOURCE TO ${db.username};
+            GRANT CREATE VIEW TO ${db.username};
+            ALTER USER ${db.username} DEFAULT ROLE ALL;
+        </sql>
+        <antcall target="create_changelog_table"/>
+    </target>
+
+    <target name="drop_schema">
+        <echo message="Admin UserName: ${db.system.username}"/>
+        <echo message="Working UserName: ${db.username}"/>
+        <sql password="${db.system.password}" userid="${db.system.username}" url="${db.url}" driver="${db.driver.name}"
+             classpath="${driver.classpath}">
+            DROP USER ${db.username} cascade ;
+        </sql>
+    </target>
+
+    <target name="create_changelog_table">
+        <sql driver="${db.driver.name}" url="${db.url}"
+             userid="${db.username}" password="${db.password}" classpath="${driver.classpath}">
+            <fileset file="${basedir}/VersionTable.sql"/>
+        </sql>
+    </target>
+
+</project>
