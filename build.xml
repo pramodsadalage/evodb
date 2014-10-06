@@ -39,7 +39,7 @@
         <sql password="${db.system.password}" userid="${db.system.username}" url="${db.url}" driver="${db.driver.name}"
              classpath="${jdbc.driver.classpath}">
             CREATE USER ${db.username} IDENTIFIED BY ${db.password} DEFAULT TABLESPACE ${db.tablespace};
-            GRANT CONNECT,RESOURCE TO ${db.username};
+            GRANT CONNECT,UNLIMITED TABLESPACE,RESOURCE TO ${db.username};
             GRANT CREATE VIEW TO ${db.username};
             ALTER USER ${db.username} DEFAULT ROLE ALL;
         </sql>
